@@ -1,0 +1,310 @@
+{
+  "name": "healthcare_relocation_workflow",
+  "description": "Comprehensive workflow to help individuals relocate between countries by researching healthcare systems, finding providers, managing prescription transitions, and drafting communications - v2 with fixed data flow",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "intake_analyzer",
+      "taskReferenceName": "intake_analyzer_ref",
+      "inputParameters": {
+        "llmProvider": "MariaOpenAI",
+        "model": "chatgpt-4o-latest",
+        "promptName": "MedicalUserIntakeAnalyzer",
+        "promptVariables": {
+          "query": "${workflow.input.query}"
+        }
+      },
+      "type": "LLM_TEXT_COMPLETE",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "extract_json_from_llm",
+      "taskReferenceName": "extract_json_from_llm_ref",
+      "inputParameters": {
+        "expression": "var raw = $.result || '';\n\nvar cleaned = raw\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/```\\s*$/i, '')\n  .trim();\n\nvar parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  throw new Error('Invalid JSON in switchCaseValue: ' + e.message);\n}\n\nparsed;\n",
+        "evaluatorType": "graaljs",
+        "result": "${intake_analyzer_ref.output.result}"
+      },
+      "type": "INLINE",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "shouldCollectMoreInfo",
+      "taskReferenceName": "shouldCollectMoreInfo_ref",
+      "inputParameters": {
+        "switchCaseValue": "${extract_json_from_llm_ref.output.result.needs_more_info}"
+      },
+      "type": "SWITCH",
+      "decisionCases": {
+        "yes": [
+          {
+            "name": "collectMoreInfo",
+            "taskReferenceName": "collectMoreInfo_ref",
+            "inputParameters": {
+              "__humanTaskDefinition": {
+                "assignmentCompletionStrategy": "LEAVE_OPEN",
+                "assignments": [],
+                "displayName": "Add More Info",
+                "userFormTemplate": {
+                  "name": "healthcare_relocation_missing_info_form",
+                  "version": 1
+                }
+              },
+              "llm_missing_info": "${extract_json_from_llm_ref.output.result.missing_info}",
+              "llm_questions_for_user": "${extract_json_from_llm_ref.output.result.questions_for_user}",
+              "llm_extracted_info": "${extract_json_from_llm_ref.output.result.extracted_info}",
+              "additional_context": ""
+            },
+            "type": "HUMAN",
+            "decisionCases": {},
+            "defaultCase": [],
+            "forkTasks": [],
+            "startDelay": 0,
+            "joinOn": [],
+            "optional": true,
+            "defaultExclusiveJoinTask": [],
+            "asyncComplete": false,
+            "loopOver": [],
+            "onStateChange": {},
+            "permissive": false
+          }
+        ]
+      },
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "evaluatorType": "graaljs",
+      "expression": "(function () {\n    if ($.switchCaseValue == true) return \"yes\";\n    return \"defaultCase\";\n})()",
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "MergeFinalBrief",
+      "taskReferenceName": "MergeFinalBrief_ref",
+      "inputParameters": {
+        "llmProvider": "MariaOpenAI",
+        "model": "gpt-5.2",
+        "promptName": "CombineAnswers",
+        "promptVariables": {
+          "additionalInfo": "${collectMoreInfo_ref.output}",
+          "originalQuery": "${workflow.input.query}"
+        }
+      },
+      "type": "LLM_TEXT_COMPLETE",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "fork_parallel_research",
+      "taskReferenceName": "parallel_ref",
+      "inputParameters": {
+        "information": "${MergeFinalBrief_ref.output.result}"
+      },
+      "type": "FORK_JOIN",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [
+        [
+          {
+            "name": "healthcare_provider_finder",
+            "taskReferenceName": "healthcare_provider_finder_ref",
+            "inputParameters": {
+              "specialty": "${MergeFinalBrief_ref.output.result}",
+              "city": "${MergeFinalBrief_ref.output.result}",
+              "preferredLanguage": "${MergeFinalBrief_ref.output.result}",
+              "insurance": "${MergeFinalBrief_ref.output.result}",
+              "query": "${MergeFinalBrief_ref.output.result}"
+            },
+            "type": "SIMPLE",
+            "decisionCases": {},
+            "defaultCase": [],
+            "forkTasks": [],
+            "startDelay": 0,
+            "joinOn": [],
+            "optional": false,
+            "defaultExclusiveJoinTask": [],
+            "asyncComplete": false,
+            "loopOver": [],
+            "retryCount": 3,
+            "onStateChange": {},
+            "permissive": false
+          }
+        ],
+        [
+          {
+            "name": "prescription_transition_manager",
+            "taskReferenceName": "prescription_transition_manager_ref",
+            "inputParameters": {
+              "medications": "${MergeFinalBrief_ref.output.result}",
+              "fromCountry": "${MergeFinalBrief_ref.output.result}",
+              "toCountry": "${MergeFinalBrief_ref.output.result}",
+              "query": "${MergeFinalBrief_ref.output.result}"
+            },
+            "type": "SIMPLE",
+            "decisionCases": {},
+            "defaultCase": [],
+            "forkTasks": [],
+            "startDelay": 0,
+            "joinOn": [],
+            "optional": false,
+            "defaultExclusiveJoinTask": [],
+            "asyncComplete": false,
+            "loopOver": [],
+            "retryCount": 3,
+            "onStateChange": {},
+            "permissive": false
+          }
+        ],
+        [
+          {
+            "name": "medical_system_navigator",
+            "taskReferenceName": "medical_system_navigator_ref",
+            "inputParameters": {
+              "query": "${MergeFinalBrief_ref.output.result}"
+            },
+            "type": "SIMPLE",
+            "decisionCases": {},
+            "defaultCase": [],
+            "forkTasks": [],
+            "startDelay": 0,
+            "joinOn": [],
+            "optional": false,
+            "defaultExclusiveJoinTask": [],
+            "asyncComplete": false,
+            "loopOver": [],
+            "retryCount": 3,
+            "onStateChange": {},
+            "permissive": false
+          }
+        ]
+      ],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "join_research_results",
+      "taskReferenceName": "join_research_ref",
+      "inputParameters": {},
+      "type": "JOIN",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [
+        "healthcare_provider_finder_ref",
+        "medical_system_navigator_ref",
+        "prescription_transition_manager_ref"
+      ],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "HealthPlanAssembler",
+      "taskReferenceName": "HealthPlanAssembler_ref",
+      "inputParameters": {
+        "llmProvider": "MariaOpenAI",
+        "model": "gpt-5.2",
+        "promptName": "AssembleHealthPlan",
+        "promptVariables": {
+          "original_query": "${workflow.input.query}",
+          "agent2": "${medical_system_navigator_ref.output}",
+          "agent1": "${prescription_transition_manager_ref.output}",
+          "agent3": "${healthcare_provider_finder_ref.output}"
+        }
+      },
+      "type": "LLM_TEXT_COMPLETE",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "onStateChange": {},
+      "permissive": false
+    },
+    {
+      "name": "communication_drafter",
+      "taskReferenceName": "communication_drafter_ref",
+      "inputParameters": {
+        "medicationInfo": "${HealthPlanAssembler_ref.output.result}",
+        "currentDoctor": "Dr.John",
+        "query": "${HealthPlanAssembler_ref.output.result}"
+      },
+      "type": "SIMPLE",
+      "decisionCases": {},
+      "defaultCase": [],
+      "forkTasks": [],
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "retryCount": 3,
+      "onStateChange": {},
+      "permissive": false
+    }
+  ],
+  "inputParameters": [
+    "query"
+  ],
+  "outputParameters": {},
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false,
+  "ownerEmail": "maria.shimkovska@orkes.io",
+  "timeoutPolicy": "TIME_OUT_WF",
+  "timeoutSeconds": 3600,
+  "variables": {},
+  "inputTemplate": {},
+  "enforceSchema": true,
+  "metadata": {},
+  "maskedFields": []
+}

@@ -1,0 +1,18 @@
+{
+  "createdBy": "maria.shimkovska@orkes.io",
+  "updatedBy": "maria.shimkovska@orkes.io",
+  "name": "CombineAnswers",
+  "template": "Combine these two sources of information ${originalQuery} and ${additionalInfo} and create a more cohesive info to pass later on to the rest of the agents. Just as a reminder here are the agents that will use this information down the road. \n\n\n**Downstream Agents You're Supporting:**\n1. Healthcare System Researcher - Needs to know: origin country, destination country, healthcare needs\n2. Provider Finder - Needs to know: destination location (city/region), medical specialties needed\n3. Prescription Transition Specialist - Needs to know: current medications (names, dosages), current prescriptions/doctors\n4. Communication Drafter - Needs to write letters to doctors, insurance companies, pharmacies\n\n\nReturn an updated query with the additional information only. ",
+  "description": "Combine answers",
+  "variables": [
+    "additionalInfo",
+    "originalQuery"
+  ],
+  "integrations": [
+    "MariaOpenAI:gpt-4o",
+    "MariaOpenAI:gpt-5.2",
+    "MariaOpenAI:chatgpt-4o-latest"
+  ],
+  "tags": [],
+  "version": 1
+}

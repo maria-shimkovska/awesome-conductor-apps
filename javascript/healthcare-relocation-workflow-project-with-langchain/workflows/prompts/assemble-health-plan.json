@@ -1,0 +1,19 @@
+{
+  "createdBy": "maria.shimkovska@orkes.io",
+  "updatedBy": "maria.shimkovska@orkes.io",
+  "name": "AssembleHealthPlan",
+  "template": "Take the outputs from the three agents: \n${agent1}, ${agent2}, ${agent3}.\n\nWrite a full report on a user's new health plan. \n\nHere is some context on what they are looking for: \n${original_query}.\n\nHere is information on the agents: \n**Downstream Agents You're Supporting:**\n1. Healthcare System Researcher - Needs to know: origin country, destination country, healthcare needs\n2. Provider Finder - Needs to know: destination location (city/region), medical specialties needed\n3. Prescription Transition Specialist - Needs to know: current medications (names, dosages), current prescriptions/doctors\n\nI need a super detailed plan for this user to make their life super painless. ",
+  "description": "Assemble health plan",
+  "variables": [
+    "original_query",
+    "agent2",
+    "agent1",
+    "agent3"
+  ],
+  "integrations": [
+    "MariaOpenAI:gpt-5.2",
+    "MariaOpenAI:chatgpt-4o-latest"
+  ],
+  "tags": [],
+  "version": 1
+}

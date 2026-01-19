@@ -1,0 +1,119 @@
+{
+  "createdBy": "USER:maria.shimkovska@orkes.io",
+  "updatedBy": "USER:maria.shimkovska@orkes.io",
+  "name": "healthcare_relocation_missing_info_form",
+  "version": 1,
+  "jsonSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "type": "object",
+    "properties": {
+      "llm_missing_info": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "llm_questions_for_user": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "llm_extracted_info": {
+        "type": "object"
+      },
+      "origin_country": {
+        "type": "string",
+        "minLength": 1
+      },
+      "destination_city": {
+        "type": "string",
+        "minLength": 1
+      },
+      "medication_dosage": {
+        "type": "string",
+        "minLength": 1
+      },
+      "specific_timeline_details": {
+        "type": "string",
+        "minLength": 1
+      },
+      "current_prescribing_doctor": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additional_context": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "origin_country",
+      "destination_city",
+      "medication_dosage",
+      "specific_timeline_details",
+      "current_prescribing_doctor"
+    ]
+  },
+  "templateUI": {
+    "type": "VerticalLayout",
+    "elements": [
+      {
+        "type": "Control",
+        "scope": "#/properties/llm_missing_info",
+        "label": "Missing info (from LLM)",
+        "options": {
+          "readonly": true
+        }
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/llm_questions_for_user",
+        "label": "Questions to answer (from LLM)",
+        "options": {
+          "readonly": true
+        }
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/llm_extracted_info",
+        "label": "Extracted info (from LLM)",
+        "options": {
+          "readonly": true
+        }
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/origin_country",
+        "label": "What country are you currently living in?"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/destination_city",
+        "label": "What city or region in the Netherlands are you moving to?"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/medication_dosage",
+        "label": "What is the dosage (e.g., mg) of medication123 that you take daily?"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/specific_timeline_details",
+        "label": "More specific move timeline (exact month/date)"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/current_prescribing_doctor",
+        "label": "Who is your current prescribing doctor for medication123?"
+      },
+      {
+        "type": "Control",
+        "scope": "#/properties/additional_context",
+        "label": "Additional context (freeform)",
+        "options": {
+          "multi": true
+        }
+      }
+    ]
+  }
+}
