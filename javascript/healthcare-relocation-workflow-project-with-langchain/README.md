@@ -42,10 +42,10 @@ This structure keeps code, configuration, and workflow definitions organized and
 
 ## Setup
 
-1. **Clone the repository** (if not already):
+1. **Clone the repository and navigate to the project folder** (if not already):
    ```zsh
-   git clone healthcare-transition-orkes-conductor-project
-   cd healthcare-transition-orkes-conductor-project
+   git clone https://github.com/conductor-oss/awesome-conductor-apps
+   cd cd awesome-conductor-apps/javascript/healthcare-relocation-workflow-project-with-langchain
    ```
 
 2. **Install dependencies:**
@@ -66,6 +66,44 @@ This structure keeps code, configuration, and workflow definitions organized and
   export OPENAI_API_KEY=<your-openai-api-key>
   ```
 
+## Required: OpenAI Integration in Orkes Developer Edition
+This project uses **built-in LLM tasks** in Orkes Conductor. To run the workflows successfully, you **must** set up an OpenAI integration in the Orkes Developer Edition.
+
+### Step 1: Create the OpenAI Integration
+
+1. Log in to the Orkes Developer Edition:  
+   https://developer.orkescloud.com/
+2. Navigate to: **Integrations → New Integration**
+3. Select **OpenAI**
+4. Fill out the integration form:
+    - **Integration name***  
+      Example: `openai`
+    - **API Key***  
+      Your OpenAI API key
+    - **Base URL**: `https://api.openai.com`
+    - **Organization ID**  
+      Optional
+    - **Description***  
+      Example: `OpenAI integration for built-in LLM tasks`
+    - **Active**  
+      Enabled
+5. Save the integration
+
+---
+
+### Step 2: Configure Supported Models
+
+After creating the integration, add the models it will support. The model name must **exactly match** the official OpenAI model name.
+
+**Example models:**
+  - `gpt-4.1`
+  - `gpt-4.1-mini`
+  - `gpt-4o`
+  - `gpt-4o-mini`
+
+Make sure the model you use in your workflows is listed here.
+
+Once this integration is set up, Conductor will be able to execute all built-in LLM tasks used by the workflow.
 ## Running the Workers
 
 Start the agent workers (they will connect to Conductor and begin polling for tasks):
@@ -106,14 +144,14 @@ When registering tasks in Conductor, use these exact names:
 - `prescription_transition_manager`
 
 You can register these tasks:
-- **Via the Conductor UI:** Go to the Task Definitions section and add each task by name.
-- **Via the Conductor SDK:** Use the SDK's task registration methods to define each task by name.
+- **Via the Conductor UI:** Go to the **Task Definitions** section and add each task by name.
+- **Via the Conductor SDK:** Use the [SDK's task registration methods](https://github.com/conductor-oss/javascript-sdk/tree/25bdeac0e9922cd1794fbd55b75f6a119aba6322?tab=readme-ov-file#step-2-define-and-register-a-task) to define each task by name.
 
 Once registered, your workers will be recognized by Conductor and will poll for work as soon as you start them.
 
 ## Workflow Registration Script: `create-workflow.mjs`
 
-This project includes a utility script, `create-workflow.mjs`, to help you register your workflow definitions and required task types with Orkes Conductor automatically.
+This project includes a utility script, `create-workflow.mjs`, to help you register your workflow definitions and required task types with Orkes Conductor automatically. This is to help set up the project faster. 
 
 ### What does it do?
 - Reads workflow JSON files (from `workflows/` by default)
@@ -161,7 +199,7 @@ CONDUCTOR_KEY_SECRET=...
 
 ## Required LLM Prompts for Workflow Registration
 
-The Orkes Conductor SDK does not currently support registering LLM prompts directly. You will need to manually create the following three prompts in the Orkes Conductor UI, making sure the names match exactly as used in the workflow definitions:
+The Conductor Javascript SDK does not currently support registering LLM prompts directly. You will need to manually create the following three prompts in the Orkes Conductor UI, making sure the names match exactly as used in the workflow definitions:
 
 ### 1. MedicalUserIntakeAnalyzer
 - **Name:** MedicalUserIntakeAnalyzer
